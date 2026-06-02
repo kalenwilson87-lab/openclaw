@@ -75,6 +75,17 @@ const cdpPortRange = (resolved: {
   return deriveDefaultBrowserCdpPortRange(resolved.controlPort);
 };
 
+/**
+ * Create a browser profiles service that exposes listing, creation, and deletion operations.
+ *
+ * The returned service uses the provided route context to read and update persisted config and
+ * in-memory resolved state and to perform per-profile runtime actions when necessary.
+ *
+ * @returns An object with the following methods:
+ *  - `listProfiles(): Promise<ProfileStatus[]>` — returns the current list of profile statuses.
+ *  - `createProfile(params: CreateProfileParams): Promise<CreateProfileResult>` — creates and persists a new profile, returning its resolved runtime information.
+ *  - `deleteProfile(name: string): Promise<DeleteProfileResult>` — removes a profile from config and optionally its local runtime data, returning whether runtime data was deleted.
+ */
 export function createBrowserProfilesService(ctx: BrowserRouteContext) {
   const listProfiles = async (): Promise<ProfileStatus[]> => {
     return await ctx.listProfiles();
