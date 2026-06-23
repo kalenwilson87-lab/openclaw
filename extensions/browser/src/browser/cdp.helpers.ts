@@ -10,9 +10,9 @@ import { resolveBrowserRateLimitMessage } from "./client-fetch.js";
 export { isLoopbackHost };
 
 /**
- * Returns true when the URL uses a WebSocket protocol (ws: or wss:).
- * Used to distinguish direct-WebSocket CDP endpoints
- * from HTTP(S) endpoints that require /json/version discovery.
+ * Determine whether a URL uses the WebSocket protocol (`ws:` or `wss:`).
+ *
+ * @returns `true` if the URL's protocol is `ws:` or `wss:`, `false` otherwise (including when the input cannot be parsed as a URL).
  */
 export function isWebSocketUrl(url: string): boolean {
   try {
@@ -23,6 +23,12 @@ export function isWebSocketUrl(url: string): boolean {
   }
 }
 
+/**
+ * Determines whether hostname policy resolution should be skipped during CDP endpoint validation.
+ *
+ * @param ssrfPolicy - The SSRF policy configuration to evaluate; when omitted resolution should be skipped.
+ * @returns `true` if resolution should be skipped: either no policy was provided, or `dangerouslyAllowPrivateNetwork` is `true` and `hostnameAllowlist` is missing or empty; `false` otherwise.
+ */
 function shouldSkipCreationTimePolicyResolution(ssrfPolicy?: SsrFPolicy): boolean {
   if (!ssrfPolicy) {
     return true;
@@ -33,6 +39,17 @@ function shouldSkipCreationTimePolicyResolution(ssrfPolicy?: SsrFPolicy): boolea
   );
 }
 
+/**
+ * Validate that a CDP endpoint URL uses an allowed protocol and, when required,
+ * verify the endpoint hostname against the provided SSRF policy.
+ *
+ * @param cdpUrl - The CDP endpoint URL to validate.
+ * @param ssrfPolicy - Optional SSRF policy used to resolve and validate the hostname.
+ *   If omitted, or if the policy explicitly allows private-network access without a hostname allowlist,
+ *   hostname policy resolution is skipped.
+ * @throws Error when the URL protocol is not one of `http`, `https`, `ws`, or `wss`.
+ * @throws Any error raised by hostname policy resolution when resolution is performed.
+ */
 export async function assertCdpEndpointAllowed(
   cdpUrl: string,
   ssrfPolicy?: SsrFPolicy,
